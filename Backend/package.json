@@ -1,0 +1,22 @@
+{
+  "name": "inder-huila-backend",
+  "version": "1.0.0",
+  "description": "Sistema de Historias Clínicas Deportivas INDER Huila - Backend",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "author": "Wilcas",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3"
+  },
+  "keywords": []
+}
