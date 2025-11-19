@@ -4,6 +4,7 @@
 // ============================================================================
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
 
 // ============================================================================
@@ -1329,143 +1330,7 @@ const MedidasAntropometricasModal = ({ isOpen, onClose, deportista }) => {
   );
 };
 
-const PruebasDesempenoModal = ({ isOpen, onClose, deportista }) => {
-  const { showToast } = useContext(AppContext);
-  const [formData, setFormData] = useState({
-    deportista_id: deportista?.id || '',
-    fecha_prueba: new Date().toISOString().split('T')[0],
-    tipo_prueba: '',
-    nombre_prueba: '',
-    resultado: '',
-    unidad_medida: '',
-    tiempo: '',
-    distancia: '',
-    repeticiones: '',
-    observaciones: '',
-    evaluador: ''
-  });
 
-  useEffect(() => {
-    if (deportista) {
-      setFormData(prev => ({ ...prev, deportista_id: deportista.id }));
-    }
-  }, [deportista]);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    showToast('Prueba de desempeño registrada exitosamente', 'success');
-    onClose();
-  };
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Registrar Prueba de Desempeño" size="lg">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Fecha de Prueba"
-          type="date"
-          name="fecha_prueba"
-          value={formData.fecha_prueba}
-          onChange={handleChange}
-          required
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <Select
-            label="Tipo de Prueba"
-            name="tipo_prueba"
-            value={formData.tipo_prueba}
-            onChange={handleChange}
-            options={[
-              { value: 'Fuerza', label: 'Fuerza' },
-              { value: 'Resistencia', label: 'Resistencia' },
-              { value: 'Velocidad', label: 'Velocidad' },
-              { value: 'Flexibilidad', label: 'Flexibilidad' },
-              { value: 'Agilidad', label: 'Agilidad' },
-              { value: 'Potencia', label: 'Potencia' },
-              { value: 'Coordinación', label: 'Coordinación' }
-            ]}
-            required
-          />
-          <Input
-            label="Nombre de la Prueba"
-            name="nombre_prueba"
-            value={formData.nombre_prueba}
-            onChange={handleChange}
-            placeholder="Ej: Test de Cooper, Sprint 100m"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <Input
-            label="Resultado"
-            name="resultado"
-            value={formData.resultado}
-            onChange={handleChange}
-            placeholder="Valor obtenido"
-            required
-          />
-          <Input
-            label="Unidad de Medida"
-            name="unidad_medida"
-            value={formData.unidad_medida}
-            onChange={handleChange}
-            placeholder="kg, m, seg, etc"
-          />
-          <Input
-            label="Tiempo"
-            name="tiempo"
-            value={formData.tiempo}
-            onChange={handleChange}
-            placeholder="mm:ss"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Distancia (metros)"
-            type="number"
-            name="distancia"
-            value={formData.distancia}
-            onChange={handleChange}
-          />
-          <Input
-            label="Repeticiones"
-            type="number"
-            name="repeticiones"
-            value={formData.repeticiones}
-            onChange={handleChange}
-          />
-        </div>
-
-        <Input
-          label="Evaluador"
-          name="evaluador"
-          value={formData.evaluador}
-          onChange={handleChange}
-          placeholder="Nombre del profesional evaluador"
-        />
-
-        <TextArea
-          label="Observaciones"
-          name="observaciones"
-          value={formData.observaciones}
-          onChange={handleChange}
-          placeholder="Condiciones de la prueba, notas relevantes..."
-        />
-
-        <div className="flex justify-end space-x-4 pt-4">
-          <Button variant="outline" onClick={onClose} type="button">Cancelar</Button>
-          <Button type="submit">Guardar Prueba</Button>
-        </div>
-      </form>
-    </Modal>
-  );
-};
 
 const LesionesModal = ({ isOpen, onClose, deportista, lesion }) => {
   const { showToast } = useContext(AppContext);
@@ -1727,94 +1592,476 @@ const MedidasAntropometricas = () => {
 };
 
 const PruebasDesempeno = () => {
-  const [showModal, setShowModal] = useState(false);
-  const [deportistaSeleccionado, setDeportistaSeleccionado] = useState(null);
-  const [pruebas] = useState([
-    { id: 1, deportista_id: 1, deportista_nombre: 'Juan Carlos Rodríguez', fecha_prueba: '2024-11-15', tipo_prueba: 'Velocidad', nombre_prueba: 'Sprint 100m', resultado: '11.2', unidad_medida: 'segundos' },
-    { id: 2, deportista_id: 1, deportista_nombre: 'Juan Carlos Rodríguez', fecha_prueba: '2024-11-10', tipo_prueba: 'Resistencia', nombre_prueba: 'Test de Cooper', resultado: '2850', unidad_medida: 'metros' },
-    { id: 3, deportista_id: 2, deportista_nombre: 'María Fernanda López', fecha_prueba: '2024-11-14', tipo_prueba: 'Fuerza', nombre_prueba: 'Press Banca', resultado: '45', unidad_medida: 'kg' }
-  ]);
+   const [disciplinaSeleccionada, setDisciplinaSeleccionada] = useState('levantamiento_pesas');
+  const [deportistaSeleccionado, setDeportistaSeleccionado] = useState('1');
 
-  const deportistas = [
-    { id: 1, nombre: 'Juan Carlos Rodríguez' },
-    { id: 2, nombre: 'María Fernanda López' },
-    { id: 3, nombre: 'Andrés Felipe Martínez' }
+  // Definición de pruebas por disciplina
+  const pruebasEstandar = {
+    levantamiento_pesas: {
+      nombre: 'Levantamiento de Pesas',
+      descripcion: 'Evaluación de la capacidad de fuerza explosiva y potencia muscular',
+      pruebas: [
+        {
+          id: 'sentadilla',
+          nombre: 'Sentadilla (Squat)',
+          unidad: 'kg',
+          descripcion: 'Movimiento de flexión de rodillas con carga. Evalúa la fuerza de miembros inferiores.',
+          tipo: 'fuerza'
+        },
+        {
+          id: 'press_banca',
+          nombre: 'Press de Banca (Bench Press)',
+          unidad: 'kg',
+          descripcion: 'Empuje horizontal con barra. Evalúa la fuerza del pecho, hombros y tríceps.',
+          tipo: 'fuerza'
+        },
+        {
+          id: 'levantamiento_muerto',
+          nombre: 'Levantamiento Muerto (Deadlift)',
+          unidad: 'kg',
+          descripcion: 'Elevación de carga desde el piso. Evalúa fuerza total del cuerpo y espalda.',
+          tipo: 'fuerza'
+        },
+        {
+          id: 'clean_jerk',
+          nombre: 'Clean & Jerk',
+          unidad: 'kg',
+          descripcion: 'Movimiento olímpico de dos fases. Evalúa potencia, coordinación y velocidad.',
+          tipo: 'potencia'
+        },
+        {
+          id: 'snatch',
+          nombre: 'Snatch (Envión)',
+          unidad: 'kg',
+          descripcion: 'Levantamiento olímpico en una sola fase. Evalúa explosividad y técnica.',
+          tipo: 'potencia'
+        }
+      ]
+    }
+  };
+
+  // Datos de deportistas
+  const deportistasPorDisciplina = {
+    levantamiento_pesas: [
+      { id: '1', nombre: 'Juan Carlos Rodríguez', documento: '1075234567' },
+      { id: '3', nombre: 'Andrés Felipe Martínez', documento: '1075456789' }
+    ]
+  };
+
+  // Estado para almacenar datos de pruebas
+  const [datosPruebas, setDatosPruebas] = useState({
+    1: {
+      sentadilla: [
+        { fecha: '2024-08-01', valor: 80, nota: 'Inicio del programa' },
+        { fecha: '2024-09-01', valor: 85, nota: 'Mejora leve' },
+        { fecha: '2024-10-01', valor: 92, nota: 'Buen progreso' },
+        { fecha: '2024-11-01', valor: 100, nota: 'Objetivo alcanzado' },
+        { fecha: '2024-11-15', valor: 105, nota: 'Superó expectativa' }
+      ],
+      press_banca: [
+        { fecha: '2024-08-01', valor: 60, nota: 'Inicio' },
+        { fecha: '2024-09-01', valor: 65, nota: 'Mejora' },
+        { fecha: '2024-10-01', valor: 70, nota: 'Progreso' },
+        { fecha: '2024-11-01', valor: 78, nota: 'Muy bueno' },
+        { fecha: '2024-11-15', valor: 82, nota: 'Excelente' }
+      ],
+      levantamiento_muerto: [
+        { fecha: '2024-08-01', valor: 100, nota: 'Inicio' },
+        { fecha: '2024-09-01', valor: 110, nota: 'Mejora' },
+        { fecha: '2024-10-01', valor: 125, nota: 'Progreso' },
+        { fecha: '2024-11-01', valor: 140, nota: 'Muy bueno' },
+        { fecha: '2024-11-15', valor: 150, nota: 'Excelente' }
+      ],
+      clean_jerk: [
+        { fecha: '2024-08-01', valor: 50, nota: 'Aprendiendo' },
+        { fecha: '2024-09-01', valor: 55, nota: 'Mejora' },
+        { fecha: '2024-10-01', valor: 62, nota: 'Progreso' },
+        { fecha: '2024-11-01', valor: 70, nota: 'Dominio' },
+        { fecha: '2024-11-15', valor: 75, nota: 'Excelente' }
+      ],
+      snatch: [
+        { fecha: '2024-08-01', valor: 40, nota: 'Aprendiendo' },
+        { fecha: '2024-09-01', valor: 45, nota: 'Mejora' },
+        { fecha: '2024-10-01', valor: 50, nota: 'Progreso' },
+        { fecha: '2024-11-01', valor: 58, nota: 'Dominio' },
+        { fecha: '2024-11-15', valor: 62, nota: 'Excelente' }
+      ]
+    },
+    3: {
+      sentadilla: [],
+      press_banca: [],
+      levantamiento_muerto: [],
+      clean_jerk: [],
+      snatch: []
+    }
+  });
+
+  // Modal para agregar prueba
+  const [showModalAgregar, setShowModalAgregar] = useState(false);
+  const [pruebaSeleccionada, setPruebaSeleccionada] = useState(null);
+  const [formAgregar, setFormAgregar] = useState({
+    fecha: new Date().toISOString().split('T')[0],
+    valor: '',
+    nota: ''
+  });
+
+  // Función para agregar un nuevo registro
+  const agregarRegistroPrueba = (e) => {
+    e.preventDefault();
+
+    if (!formAgregar.valor) {
+      alert('Por favor ingresa un valor');
+      return;
+    }
+
+    const nuevoRegistro = {
+      fecha: formAgregar.fecha,
+      valor: parseFloat(formAgregar.valor),
+      nota: formAgregar.nota || 'Registro normal'
+    };
+
+    setDatosPruebas(prevData => ({
+      ...prevData,
+      [deportistaSeleccionado]: {
+        ...prevData[deportistaSeleccionado],
+        [pruebaSeleccionada.id]: [
+          ...prevData[deportistaSeleccionado][pruebaSeleccionada.id],
+          nuevoRegistro
+        ].sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+      }
+    }));
+
+    setFormAgregar({
+      fecha: new Date().toISOString().split('T')[0],
+      valor: '',
+      nota: ''
+    });
+    setShowModalAgregar(false);
+  };
+
+  // Función para filtrar datos por tiempo
+  const filtrarDatosPorTiempo = (datos, filtro) => {
+    if (!datos || datos.length === 0) return [];
+
+    const hoy = new Date();
+    let fechaLimite = new Date();
+
+    switch(filtro) {
+      case 'semana':
+        fechaLimite.setDate(hoy.getDate() - 7);
+        break;
+      case 'mes':
+        fechaLimite.setMonth(hoy.getMonth() - 1);
+        break;
+      case 'año':
+        fechaLimite.setFullYear(hoy.getFullYear() - 1);
+        break;
+      default:
+        fechaLimite.setMonth(hoy.getMonth() - 1);
+    }
+
+    return datos.filter(d => new Date(d.fecha) >= fechaLimite);
+  };
+
+  // Componente para mostrar cada prueba
+  const ComponentePrueba = ({ prueba, datos }) => {
+    const [filtroTiempo, setFiltroTiempo] = useState('mes');
+
+    const datosFiltrados = filtrarDatosPorTiempo(datos, filtroTiempo);
+    const tieneHistorial = datosFiltrados && datosFiltrados.length > 0;
+
+    const datosGrafica = datosFiltrados.map(d => ({
+      fecha: new Date(d.fecha).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }),
+      valor: d.valor,
+      nota: d.nota
+    }));
+
+    const calcularProgreso = () => {
+      if (datosFiltrados.length < 2) return 0;
+      const primero = datosFiltrados[0].valor;
+      const ultimo = datosFiltrados[datosFiltrados.length - 1].valor;
+      return ((ultimo - primero) / primero * 100).toFixed(1);
+    };
+
+    const progreso = calcularProgreso();
+    const valorActual = datosFiltrados.length > 0 ? datosFiltrados[datosFiltrados.length - 1].valor : 0;
+    const mejorValor = datosFiltrados.length > 0 ? Math.max(...datosFiltrados.map(d => d.valor)) : 0;
+    const peorValor = datosFiltrados.length > 0 ? Math.min(...datosFiltrados.map(d => d.valor)) : 0;
+
+    return (
+      <Card title={prueba.nombre} className="mb-6">
+        {/* Descripción y botón agregar */}
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg flex justify-between items-start">
+          <div>
+            <p className="text-sm text-gray-600 mb-2">{prueba.descripcion}</p>
+            <p className="text-xs text-gray-500">Unidad: <span className="font-semibold">{prueba.unidad}</span></p>
+          </div>
+          <Button 
+            variant="secondary"
+            onClick={() => {
+              setPruebaSeleccionada(prueba);
+              setShowModalAgregar(true);
+            }}
+            className="whitespace-nowrap ml-4"
+          >
+            + Agregar Registro
+          </Button>
+        </div>
+
+        {/* Métricas */}
+        <div className="grid grid-cols-4 gap-3 mb-4">
+          <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-600">
+            <p className="text-xs text-gray-500 uppercase">Valor Actual</p>
+            <p className="text-xl font-bold text-blue-900">{valorActual} {prueba.unidad}</p>
+          </div>
+          <div className="p-3 bg-green-50 rounded-lg border-l-4 border-green-600">
+            <p className="text-xs text-gray-500 uppercase">Mejor</p>
+            <p className="text-xl font-bold text-green-600">{mejorValor} {prueba.unidad}</p>
+          </div>
+          <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-600">
+            <p className="text-xs text-gray-500 uppercase">Peor</p>
+            <p className="text-xl font-bold text-red-600">{peorValor} {prueba.unidad}</p>
+          </div>
+          <div className={`p-3 rounded-lg border-l-4 ${progreso >= 0 ? 'bg-green-50 border-green-600' : 'bg-red-50 border-red-600'}`}>
+            <p className="text-xs text-gray-500 uppercase">Progreso</p>
+            <p className={`text-xl font-bold ${progreso >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {progreso > 0 ? '+' : ''}{progreso}%
+            </p>
+          </div>
+        </div>
+
+        {/* Filtros de tiempo */}
+        <div className="mb-4 flex gap-2">
+          <p className="text-sm font-medium text-gray-700 self-center">Filtrar por:</p>
+          {['semana', 'mes', 'año'].map((periodo) => (
+            <button
+              key={periodo}
+              onClick={() => setFiltroTiempo(periodo)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                filtroTiempo === periodo
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Último {periodo === 'semana' ? 'Semana' : periodo === 'mes' ? 'Mes' : 'Año'}
+            </button>
+          ))}
+        </div>
+
+        {/* Gráfica */}
+        {tieneHistorial ? (
+          <div className="mb-4 bg-white p-4 rounded-lg border border-gray-200">
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">Evolución</h4>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={datosGrafica}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="fecha" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value) => `${value} ${prueba.unidad}`}
+                  labelFormatter={(label) => `Fecha: ${label}`}
+                  contentStyle={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="valor" 
+                  stroke="#1e3a8a" 
+                  dot={{ fill: '#1e3a8a', r: 5 }}
+                  activeDot={{ r: 8 }}
+                  name={prueba.nombre}
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="text-center py-8 bg-gray-50 rounded-lg mb-4">
+            <p className="text-gray-500">📊 No hay datos para este período</p>
+          </div>
+        )}
+
+        {/* Tabla histórica */}
+        {datosFiltrados.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">Historial de registros</h4>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-2 text-left">Fecha</th>
+                    <th className="px-4 py-2 text-right">Valor</th>
+                    <th className="px-4 py-2 text-left">Nota</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {datosFiltrados.map((registro, idx) => (
+                    <tr key={idx} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-2">
+                        {new Date(registro.fecha).toLocaleDateString('es-ES', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </td>
+                      <td className="px-4 py-2 text-right font-semibold text-blue-900">
+                        {registro.valor} {prueba.unidad}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600">{registro.nota}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </Card>
+    );
+  };
+
+  const disciplinas = [
+    { value: 'levantamiento_pesas', label: 'Levantamiento de Pesas' }
   ];
 
-  const pruebasFiltradas = deportistaSeleccionado 
-    ? pruebas.filter(p => p.deportista_id === deportistaSeleccionado.id)
-    : [];
+  const deportistasDisponibles = deportistasPorDisciplina[disciplinaSeleccionada] || [];
+  const disciplinaActual = pruebasEstandar[disciplinaSeleccionada];
+  const deportistaActual = deportistasDisponibles.find(d => d.id === deportistaSeleccionado);
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Select
-          label="Seleccionar Deportista"
-          value={deportistaSeleccionado?.id || ''}
-          onChange={(e) => {
-            const dep = deportistas.find(d => d.id === parseInt(e.target.value));
-            setDeportistaSeleccionado(dep);
-          }}
-          options={deportistas.map(d => ({ value: d.id, label: d.nombre }))}
-        />
-        <Button 
-          onClick={() => setShowModal(true)} 
-          disabled={!deportistaSeleccionado}
-        >
-          + Registrar Prueba
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-800">📈 Pruebas de Desempeño Deportivo</h1>
+        <p className="text-gray-600 mt-2">Módulo de seguimiento, gráficas y análisis de pruebas con datos en tiempo real</p>
       </div>
 
-      {deportistaSeleccionado ? (
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prueba</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Resultado</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unidad</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {pruebasFiltradas.map((prueba) => (
-                  <tr key={prueba.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{prueba.fecha_prueba}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                        {prueba.tipo_prueba}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{prueba.nombre_prueba}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">{prueba.resultado}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{prueba.unidad_medida}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {pruebasFiltradas.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No hay pruebas registradas para este deportista</p>
+      {/* Filtros */}
+      <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Select
+            label="1️⃣ Disciplina"
+            value={disciplinaSeleccionada}
+            onChange={(e) => setDisciplinaSeleccionada(e.target.value)}
+            options={disciplinas}
+          />
+
+          <Select
+            label="2️⃣ Deportista"
+            value={deportistaSeleccionado}
+            onChange={(e) => setDeportistaSeleccionado(e.target.value)}
+            options={deportistasDisponibles.map(d => ({ value: d.id, label: `${d.nombre} (${d.documento})` }))}
+          />
+        </div>
+      </Card>
+
+      {/* Información */}
+      {disciplinaActual && deportistaActual && (
+        <Card className="bg-blue-50 border-l-4 border-blue-900">
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-2xl font-bold text-blue-900 mb-2">{disciplinaActual.nombre}</h2>
+              <p className="text-gray-700">{disciplinaActual.descripcion}</p>
             </div>
-          )}
-        </Card>
-      ) : (
-        <Card>
-          <p className="text-gray-500 text-center py-12">
-            Seleccione un deportista para ver su historial de pruebas de desempeño
-          </p>
+            <div className="text-right">
+              <p className="text-sm text-gray-600">Deportista:</p>
+              <p className="text-lg font-bold text-blue-900">{deportistaActual.nombre}</p>
+              <p className="text-xs text-gray-500">Doc: {deportistaActual.documento}</p>
+            </div>
+          </div>
         </Card>
       )}
 
-      <PruebasDesempenoModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        deportista={deportistaSeleccionado}
-      />
+      {/* Pruebas */}
+      {disciplinaActual && deportistaActual && (
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Pruebas Registradas</h2>
+          
+          {disciplinaActual.pruebas.map(prueba => {
+            const datosDeportista = datosPruebas[deportistaSeleccionado] || {};
+            const datosPrueba = datosDeportista[prueba.id] || [];
+            
+            return (
+              <ComponentePrueba
+                key={prueba.id}
+                prueba={prueba}
+                datos={datosPrueba}
+              />
+            );
+          })}
+
+          {/* Resumen */}
+          <Card title="📊 Resumen Estadístico" className="mt-6 bg-green-50">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-white rounded-lg border-l-4 border-green-600">
+                <p className="text-sm text-gray-600">Total de Pruebas</p>
+                <p className="text-3xl font-bold text-green-700">{disciplinaActual.pruebas.length}</p>
+              </div>
+              <div className="p-4 bg-white rounded-lg border-l-4 border-blue-600">
+                <p className="text-sm text-gray-600">Total de Registros</p>
+                <p className="text-3xl font-bold text-blue-900">
+                  {Object.values(datosPruebas[deportistaSeleccionado] || {}).reduce((acc, arr) => acc + arr.length, 0)}
+                </p>
+              </div>
+              <div className="p-4 bg-white rounded-lg border-l-4 border-purple-600">
+                <p className="text-sm text-gray-600">Deportista Actual</p>
+                <p className="text-lg font-bold text-purple-900">{deportistaActual.nombre}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-600 rounded">
+              <p className="text-sm font-semibold text-yellow-900">💡 Nota:</p>
+              <p className="text-sm text-yellow-800 mt-1">
+                Los datos se guardan en memoria durante esta sesión. Para persistencia en BD, se integrará con el backend.
+              </p>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* MODAL PARA AGREGAR PRUEBA */}
+      <Modal 
+        isOpen={showModalAgregar} 
+        onClose={() => setShowModalAgregar(false)} 
+        title={`Registrar ${pruebaSeleccionada?.nombre}`} 
+        size="md"
+      >
+        <form onSubmit={agregarRegistroPrueba} className="space-y-4">
+          <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-600">
+            <p className="text-sm text-gray-600">Deportista:</p>
+            <p className="text-lg font-bold text-blue-900">{deportistaActual?.nombre}</p>
+            <p className="text-sm text-gray-600 mt-1">Prueba: {pruebaSeleccionada?.nombre}</p>
+          </div>
+
+          <Input
+            label="Fecha del Registro"
+            type="date"
+            value={formAgregar.fecha}
+            onChange={(e) => setFormAgregar({...formAgregar, fecha: e.target.value})}
+            required
+          />
+
+          <Input
+            label={`Valor (${pruebaSeleccionada?.unidad})`}
+            type="number"
+            step="0.1"
+            value={formAgregar.valor}
+            onChange={(e) => setFormAgregar({...formAgregar, valor: e.target.value})}
+            placeholder={`Ej: ${pruebaSeleccionada?.unidad === 'kg' ? '100' : '12.5'}`}
+            required
+          />
+
+          <TextArea
+            label="Nota o Observación"
+            value={formAgregar.nota}
+            onChange={(e) => setFormAgregar({...formAgregar, nota: e.target.value})}
+            placeholder="Ej: Buena técnica, con fatiga acumulada, etc"
+          />
+
+          <div className="flex justify-end space-x-4 pt-4 border-t">
+            <Button variant="outline" onClick={() => setShowModalAgregar(false)} type="button">Cancelar</Button>
+            <Button type="submit">Guardar Registro</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };
